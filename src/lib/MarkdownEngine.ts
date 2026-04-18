@@ -18,7 +18,7 @@ const STYLES = {
   u: 'text-decoration: underline !important; display: inline !important;',
   mark: 'background-color: #FAF3DD !important; color: #373530 !important; padding: 0 2px; border-radius: 2px; display: inline !important;',
   code: 'font-family: Menlo, Monaco, Consolas, monospace; font-size: 0.9em; background: #F7F6F3; padding: 0.2em 0.4em; border-radius: 3px; color: #373530; font-weight: 500; display: inline !important;',
-  pre: 'background: #F7F6F3; padding: 1em; border-radius: 5px; overflow-x: auto; margin: 1.2em 0; line-height: 1.5; font-size: 14px; border: 1px solid #E9E9E8; display: block;',
+  pre: 'background: #F7F6F3; padding: 1.2em; border-radius: 5px; overflow-x: auto; margin: 1.2em 0; line-height: 1.5; font-size: 14px; border: 1px solid #E9E9E8; display: block;',
   blockquote: 'margin: 1.5em 0; padding: 0.5em 1.2em; border-left: 4px solid #373530; color: #373530; background: #F1F1EF; border-radius: 3px; display: block;',
   ul: 'margin: 1em 0; padding-left: 1.5em; list-style-type: disc; display: block;',
   ol: 'margin: 1em 0; padding-left: 1.5em; list-style-type: decimal; display: block;',
@@ -166,7 +166,24 @@ export class MarkdownEngine {
   public render(markdown: string): string {
     this.footnotes = [];
     try {
-      const tokens = this.markedInstance.lexer(markdown);
+      let content = markdown;
+      const calloutBlocks: string[] = [];
+
+      // 1. 预处理：保护 Callout 区块，防止被 lexer 拆散
+      content = content.replace(/^:::callout\s+([\s\S]+?)\n:::/gm, (_, inner) => {
+        const id = `__CALLOUT_BLOCK_${calloutBlocks.length}__`;
+        const m = inner.match(/^([\uD800-\uDBFF][\uDC00-\uDFFF]|[\u2600-\u27BF])\s?([\s\S]+)$/);
+        const icon = m ? m[1] : '💡';
+        const text = m ? m[2] : inner;
+        
+        calloutBlocks.push(`<div style="margin: 1.5em 0; padding: 1.2em; background: #F1F1EF; border-radius: 4px; display: flex; align-items: flex-start; gap: 0.8em; border: 1px solid #E9E9E8;">
+          <div style="font-size: 1.3em; line-height: 1; flex-shrink: 0;">${icon}</div>
+          <div style="flex: 1; color: #373530; font-size: 16px; line-height: 1.6;">${this.renderInline(text.trim())}</div>
+        </div>`);
+        return `\n\n${id}\n\n`;
+      });
+
+      const tokens = this.markedInstance.lexer(content);
       let html = '';
 
       tokens.forEach((token: Token) => {
@@ -177,7 +194,13 @@ export class MarkdownEngine {
             html += `<h${token.depth} style="${hStyle}">${this.renderInline(token.text)}</h${token.depth}>`;
             break;
           case 'paragraph':
-            html += `<p style="${STYLES.p}">${this.renderInline(token.text)}</p>`;
+            // 检查是否是 Callout 占位符
+            const pText = token.text.trim();
+            if (pText.startsWith('__CALLOUT_BLOCK_') && pText.endsWith('__')) {
+              html += pText; // 暂时原样放入，后面统一还原
+            } else {
+              html += `<p style="${STYLES.p}">${this.renderInline(token.text)}</p>`;
+            }
             break;
           case 'blockquote':
             html += `<blockquote style="${STYLES.blockquote}">${this.render(token.text)}</blockquote>`;
@@ -212,18 +235,13 @@ export class MarkdownEngine {
           case 'space':
             break;
           default:
-            if (token.raw.startsWith(':::callout')) {
-              const match = token.raw.match(/:::callout ([\s\S]+?) :::/);
-              if (match) {
-                const inner = match[1];
-                const m = inner.match(/^([\uD800-\uDBFF][\uDC00-\uDFFF]|[\u2600-\u27BF])\s?([\s\S]+)$/);
-                html += `<div style="margin:1em 0; padding:1.2em; background:#F1F1EF; border-radius:4px; display:flex; align-items:flex-start; gap:0.8em;">
-                  <div style="font-size:1.2em;">${m ? m[1] : '💡'}</div>
-                  <div style="flex:1; color:#373530; font-size:16px; line-height:1.6;">${this.renderInline(m ? m[2] : inner)}</div>
-                </div>`;
-              }
-            }
+            html += token.raw;
         }
+      });
+
+      // 2. 还原 Callout 区块
+      calloutBlocks.forEach((blockHtml, i) => {
+        html = html.replace(`__CALLOUT_BLOCK_${i}__`, blockHtml);
       });
 
       if (this.footnotes.length > 0) {
