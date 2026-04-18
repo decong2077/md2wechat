@@ -1,4 +1,4 @@
-import { marked } from 'marked';
+import { Marked, type Token } from 'marked';
 import Prism from 'prismjs';
 import 'prismjs/components/prism-javascript';
 import 'prismjs/components/prism-typescript';
@@ -32,20 +32,103 @@ const STYLES = {
 };
 
 export class MarkdownEngine {
+  private markedInstance: Marked;
   private footnotes: { title: string; url: string }[] = [];
+
+  constructor() {
+    this.markedInstance = new Marked();
+    this.setup();
+  }
+
+  private setup() {
+    const self = this;
+
+    const extensions: any[] = [
+      {
+        name: 'underline',
+        level: 'inline',
+        start(src: string) { return src.indexOf('<u>'); },
+        tokenizer(src: string) {
+          const match = /^<u>([\s\S]+?)<\/u>/.exec(src);
+          if (match) return { type: 'underline', raw: match[0], text: match[1] };
+        },
+        renderer(token: any) { return `<span style="${STYLES.u}">${(this as any).parser.parseInline(token.tokens || [])}</span>`; }
+      },
+      {
+        name: 'mark',
+        level: 'inline',
+        start(src: string) { return src.indexOf('=='); },
+        tokenizer(src: string) {
+          const match = /^==([\s\S]+?)==/.exec(src);
+          if (match) return { type: 'mark', raw: match[0], text: match[1] };
+        },
+        renderer(token: any) { return `<mark style="${STYLES.mark}">${(this as any).parser.parseInline(token.tokens || [])}</mark>`; }
+      }
+    ];
+
+    this.markedInstance.use({
+      gfm: true,
+      breaks: true,
+      extensions,
+      renderer: {
+        strong({ text }: any) { return `<strong style="${STYLES.strong}">${text}</strong>`; },
+        em({ text }: any) { return `<em style="${STYLES.em}">${text}</em>`; },
+        del({ text }: any) { return `<del style="${STYLES.del}">${text}</del>`; },
+        codespan({ text }: any) { return `<code style="${STYLES.code}">${text}</code>`; },
+        heading({ text, depth }: any) {
+          const styles = [STYLES.h1, STYLES.h2, STYLES.h3, STYLES.h3, STYLES.h3, STYLES.h3];
+          const style = styles[depth - 1] || STYLES.h3;
+          return `<h${depth} style="${style}">${text}</h${depth}>`;
+        },
+        paragraph({ text }: any) { return `<p style="${STYLES.p}">${text}</p>`; },
+        blockquote({ text }: any) { return `<blockquote style="${STYLES.blockquote}">${text}</blockquote>`; },
+        hr() { return `<hr style="${STYLES.hr}" />`; },
+        list(token: any) {
+          const tag = token.ordered ? 'ol' : 'ul';
+          const style = token.ordered ? STYLES.ol : STYLES.ul;
+          const body = token.items.map((item: any) => {
+            const checked = item.task ? (item.checked ? '☑️ ' : '⬜ ') : '';
+            return `<li style="${STYLES.li}">${checked}${item.text}</li>`;
+          }).join('');
+          return `<${tag} style="${style}">${body}</${tag}>`;
+        },
+        code({ text, lang }: any) {
+          const language = lang || 'javascript';
+          let highlighted = text;
+          try {
+            if (Prism.languages[language]) {
+              highlighted = Prism.highlight(text, Prism.languages[language], language);
+            }
+          } catch (e) {}
+          return `<pre style="${STYLES.pre}"><code style="font-family:inherit; white-space:pre;">${highlighted}</code></pre>`;
+        },
+        link({ href, text }: any) {
+          if (href.startsWith('#')) return `<span style="${STYLES.a}">${text}</span>`;
+          self.footnotes.push({ title: text, url: href });
+          return `<span style="${STYLES.a}">${text}</span><sup style="font-size:10px; color:#787774; margin-left:2px;">[${self.footnotes.length}]</sup>`;
+        },
+        image({ href, text, title }: any) {
+          return `<img src="${href}" alt="${text}" title="${title || ''}" style="${STYLES.img}" />`;
+        },
+        table({ header, rows }: any) {
+          const hHtml = header.map((c: any) => `<th style="${STYLES.th}">${c.text}</th>`).join('');
+          const bHtml = rows.map((r: any) => `<tr>${r.map((c: any) => `<td style="${STYLES.td}">${c.text}</td>`).join('')}</tr>`).join('');
+          return `<div style="${STYLES.tableWrapper}"><table style="${STYLES.table}"><thead><tr>${hHtml}</tr></thead><tbody>${bHtml}</tbody></table></div>`;
+        }
+      }
+    });
+  }
 
   private renderInline(text: string): string {
     let html = text;
     const placeholders: string[] = [];
 
-    // 1. 保护行内代码：使用特殊符号 ⦓...⦔ 避免被后续的下划线/星号正则匹配
     html = html.replace(/`([\s\S]+?)`/g, (_, code) => {
       const id = `⦓${placeholders.length}⦔`;
       placeholders.push(`<code style="${STYLES.code}">${code}</code>`);
       return id;
     });
 
-    // 2. 保护转义字符：将 \\, \*, \_ 等转换为临时占位符，防止触发样式
     const escapePlaceholders: string[] = [];
     html = html.replace(/\\([\*\_\`\#\-\+\>\!\(\)\[\]\\])/g, (_, char) => {
       const id = `⦔${escapePlaceholders.length}⦓`;
@@ -53,7 +136,6 @@ export class MarkdownEngine {
       return id;
     });
 
-    // 3. 解析 Markdown 强调格式 (此时占位符中没有 * 或 _)
     html = html.replace(/\*\*\*([\s\S]+?)\*\*\*/g, `<strong style="${STYLES.strong}"><em style="${STYLES.em}">$1</em></strong>`);
     html = html.replace(/\*\*([\s\S]+?)\*\*/g, `<strong style="${STYLES.strong}">$1</strong>`);
     html = html.replace(/__([\s\S]+?)__/g, `<strong style="${STYLES.strong}">$1</strong>`);
@@ -63,19 +145,16 @@ export class MarkdownEngine {
     html = html.replace(/==([\s\S]+?)==/g, `<mark style="${STYLES.mark}">$1</mark>`);
     html = html.replace(/<u>([\s\S]+?)<\/u>/g, `<span style="${STYLES.u}">$1</span>`);
 
-    // 4. 解析链接
     html = html.replace(/\[([\s\S]+?)\]\(([\s\S]+?)\)/g, (_, label, href) => {
       if (href.startsWith('#')) return `<span style="${STYLES.a}">${label}</span>`;
       this.footnotes.push({ title: label, url: href });
       return `<span style="${STYLES.a}">${label}</span><sup style="font-size:10px; color:#787774; margin-left:2px;">[${this.footnotes.length}]</sup>`;
     });
 
-    // 5. 还原转义字符
     escapePlaceholders.forEach((char, i) => {
       html = html.split(`⦔${i}⦓`).join(char);
     });
 
-    // 6. 还原行内代码
     placeholders.forEach((val, i) => {
       html = html.split(`⦓${i}⦔`).join(val);
     });
@@ -86,13 +165,14 @@ export class MarkdownEngine {
   public render(markdown: string): string {
     this.footnotes = [];
     try {
-      const tokens = marked.lexer(markdown);
+      const tokens = this.markedInstance.lexer(markdown);
       let html = '';
 
-      tokens.forEach(token => {
+      tokens.forEach((token: Token) => {
         switch (token.type) {
           case 'heading':
-            const hStyle = [STYLES.h1, STYLES.h2, STYLES.h3, STYLES.h3, STYLES.h3, STYLES.h3][token.depth - 1];
+            const styles = [STYLES.h1, STYLES.h2, STYLES.h3, STYLES.h3, STYLES.h3, STYLES.h3];
+            const hStyle = styles[token.depth - 1] || STYLES.h3;
             html += `<h${token.depth} style="${hStyle}">${this.renderInline(token.text)}</h${token.depth}>`;
             break;
           case 'paragraph':
@@ -105,7 +185,7 @@ export class MarkdownEngine {
             const tag = token.ordered ? 'ol' : 'ul';
             const lStyle = token.ordered ? STYLES.ol : STYLES.ul;
             let listBody = '';
-            token.items.forEach(item => {
+            token.items.forEach((item: any) => {
               const content = item.task ? `${item.checked ? '☑️' : '⬜'} ${item.text}` : item.text;
               listBody += `<li style="${STYLES.li}">${this.renderInline(content)}</li>`;
             });
@@ -121,8 +201,8 @@ export class MarkdownEngine {
             html += `<pre style="${STYLES.pre}"><code style="font-family:inherit; white-space:pre;">${highlighted}</code></pre>`;
             break;
           case 'table':
-            const header = token.header.map(c => `<th style="${STYLES.th}">${this.renderInline(c.text)}</th>`).join('');
-            const rows = token.rows.map(r => `<tr>${r.map(c => `<td style="${STYLES.td}">${this.renderInline(c.text)}</td>`).join('')}</tr>`).join('');
+            const header = token.header.map((c: any) => `<th style="${STYLES.th}">${this.renderInline(c.text)}</th>`).join('');
+            const rows = token.rows.map((r: any) => `<tr>${r.map((c: any) => `<td style="${STYLES.td}">${this.renderInline(c.text)}</td>`).join('')}</tr>`).join('');
             html += `<div style="${STYLES.tableWrapper}"><table style="${STYLES.table}"><thead><tr>${header}</tr></thead><tbody>${rows}</tbody></table></div>`;
             break;
           case 'hr':
