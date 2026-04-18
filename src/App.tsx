@@ -99,7 +99,7 @@ export default function App() {
                 </motion.div>
               ) : (
                 <motion.div key="n" initial={{ y: 5, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -5, opacity: 0 }} className="flex items-center gap-2">
-                  <Copy size={16} /> <span>复制到微信</span>
+                  <Copy size={16} /> <span>复制到公众号</span>
                 </motion.div>
               )}
             </AnimatePresence>

@@ -11,9 +11,12 @@ import 'prismjs/components/prism-python';
  * 微信极致兼容版行内样式 - 优先使用 table 替代 flex
  */
 const S = {
-  h1: 'font-size: 2em; font-weight: bold; margin-top: 1.6em; margin-bottom: 0.6em; color: #373530; border-bottom: 1px solid #E9E9E8; padding-bottom: 0.3em; line-height: 1.3; display: block;',
-  h2: 'font-size: 1.5em; font-weight: bold; margin-top: 1.5em; margin-bottom: 0.5em; color: #373530; line-height: 1.3; display: block;',
-  h3: 'font-size: 1.25em; font-weight: bold; margin-top: 1.4em; margin-bottom: 0.4em; color: #373530; line-height: 1.3; display: block;',
+  h1: 'font-size: 1.8em; font-weight: bold; margin-top: 1.4em; margin-bottom: 0.6em; color: #373530; border-bottom: 1px solid #E9E9E8; padding-bottom: 0.3em; line-height: 1.3; display: block;',
+  h2: 'font-size: 1.4em; font-weight: bold; margin-top: 1.3em; margin-bottom: 0.5em; color: #373530; line-height: 1.3; display: block;',
+  h3: 'font-size: 1.2em; font-weight: bold; margin-top: 1.2em; margin-bottom: 0.4em; color: #373530; line-height: 1.3; display: block;',
+  h4: 'font-size: 1.1em; font-weight: bold; margin-top: 1.1em; margin-bottom: 0.3em; color: #373530; line-height: 1.3; display: block;',
+  h5: 'font-size: 1em; font-weight: bold; margin-top: 1em; margin-bottom: 0.3em; color: #373530; line-height: 1.3; display: block;',
+  h6: 'font-size: 1em; font-weight: bold; margin-top: 1em; margin-bottom: 0.3em; color: #787774; line-height: 1.3; display: block;',
   p: 'font-size: 16px; line-height: 1.8; margin: 1em 0; color: #373530; word-wrap: break-word; display: block;',
   strong: 'font-weight: bold !important; color: #000000 !important; display: inline !important;',
   em: 'font-style: italic !important; display: inline !important;',
@@ -80,7 +83,7 @@ export class MarkdownEngine {
         del({ text }: any) { return `<del style="${S.del}">${text}</del>`; },
         codespan({ text }: any) { return `<code style="${S.code}">${text}</code>`; },
         heading({ text, depth }: any) {
-          const styles = [S.h1, S.h2, S.h3, S.h3, S.h3, S.h3];
+          const styles = [S.h1, S.h2, S.h3, S.h4, S.h5, S.h6];
           const style = styles[depth - 1] || S.h3;
           return `<h${depth} style="${style}">${text}</h${depth}>`;
         },
@@ -184,7 +187,7 @@ export class MarkdownEngine {
       tokens.forEach((token: Token) => {
         switch (token.type) {
           case 'heading':
-            const hStyle = ([S.h1, S.h2, S.h3, S.h3, S.h3, S.h3] as any)[token.depth - 1] || S.h3;
+            const hStyle = ([S.h1, S.h2, S.h3, S.h4, S.h5, S.h6] as any)[token.depth - 1] || S.h3;
             html += `<h${token.depth} style="${hStyle}">${this.renderInline(token.text)}</h${token.depth}>`;
             break;
           case 'paragraph':
