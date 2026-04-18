@@ -1,0 +1,87 @@
+@import "tailwindcss";
+
+@theme {
+  --color-notion-bg: #FFFFFF;
+  --color-notion-text: #373530;
+  --color-notion-gray: #787774;
+  --color-notion-light-gray: #F1F1EF;
+  --color-notion-blue: #487CA5;
+  --color-notion-green: #548164;
+  --color-notion-yellow: #C29343;
+  --color-notion-red: #C4554D;
+  
+  --radius-notion: 3px;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-notion-bg);
+    color: var(--color-notion-text);
+    -webkit-font-smoothing: antialiased;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  }
+
+  /* 彻底解决粗体斜体失效：针对预览容器内的标签进行强力恢复 */
+  .notion-render-container strong {
+    font-weight: bold !important;
+    display: inline !important;
+    color: inherit;
+  }
+
+  .notion-render-container em {
+    font-style: italic !important;
+    display: inline !important;
+    color: inherit;
+  }
+
+  .notion-render-container del {
+    text-decoration: line-through !important;
+  }
+
+  .notion-render-container u {
+    text-decoration: underline !important;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  /* PrismJS Minimal Theme */
+  .token.comment { color: #787774; }
+  .token.punctuation { color: #373530; }
+  .token.property, .token.tag, .token.boolean, .token.number { color: #EB5757; }
+  .token.string { color: #448BBA; }
+  .token.keyword { color: #487CA5; }
+  .token.function { color: #D9730D; }
+}
+
+.btn-notion {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.375rem 0.75rem;
+  border-radius: var(--radius-notion);
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 200ms;
+}
+
+.btn-notion-primary {
+  background-color: var(--color-notion-blue);
+  color: #FFFFFF;
+}
+.btn-notion-primary:hover {
+  background-color: #3b6685;
+}
+
+.btn-notion-secondary {
+  color: var(--color-notion-gray);
+}
+.btn-notion-secondary:hover {
+  background-color: var(--color-notion-light-gray);
+  color: var(--color-notion-text);
+}
