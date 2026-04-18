@@ -25,6 +25,7 @@ const STYLES = {
   li: 'margin: 0.5em 0; line-height: 1.6; display: list-item;',
   hr: 'border: none; border-top: 1px solid #E9E9E8; margin: 2em 0; display: block;',
   a: 'color: #487CA5; text-decoration: underline; display: inline;',
+  img: 'max-width: 100%; border-radius: 4px; margin: 1.5em auto; display: block;',
   tableWrapper: 'width: 100%; overflow-x: auto; margin: 1.5em 0; border-radius: 4px; border: 1px solid #E9E9E8; display: block;',
   table: 'border-collapse: collapse; min-width: 100%; margin: 0; font-size: 14px; display: table;',
   th: 'border: 1px solid #E9E9E8; padding: 10px 14px; background: #F7F6F3; font-weight: bold; text-align: left; white-space: nowrap; display: table-cell;',
