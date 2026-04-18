@@ -7,7 +7,10 @@ import 'prismjs/components/prism-json';
 import 'prismjs/components/prism-bash';
 import 'prismjs/components/prism-python';
 
-const STYLES = {
+/**
+ * 微信极致兼容版行内样式 - 优先使用 table 替代 flex
+ */
+const S = {
   h1: 'font-size: 2em; font-weight: bold; margin-top: 1.6em; margin-bottom: 0.6em; color: #373530; border-bottom: 1px solid #E9E9E8; padding-bottom: 0.3em; line-height: 1.3; display: block;',
   h2: 'font-size: 1.5em; font-weight: bold; margin-top: 1.5em; margin-bottom: 0.5em; color: #373530; line-height: 1.3; display: block;',
   h3: 'font-size: 1.25em; font-weight: bold; margin-top: 1.4em; margin-bottom: 0.4em; color: #373530; line-height: 1.3; display: block;',
@@ -26,10 +29,11 @@ const STYLES = {
   hr: 'border: none; border-top: 1px solid #E9E9E8; margin: 2em 0; display: block;',
   a: 'color: #487CA5; text-decoration: underline; display: inline;',
   img: 'max-width: 100%; border-radius: 4px; margin: 1.5em auto; display: block;',
-  tableWrapper: 'width: 100%; overflow-x: auto; margin: 1.5em 0; border-radius: 4px; border: 1px solid #E9E9E8; display: block;',
+  // 微信后台表格滑动专用方案
+  tableWrapper: 'width: 100%; overflow-x: auto; margin: 1.5em 0; border-radius: 4px; border: 1px solid #E9E9E8; display: block; -webkit-overflow-scrolling: touch;',
   table: 'border-collapse: collapse; min-width: 100%; margin: 0; font-size: 14px; display: table;',
-  th: 'border: 1px solid #E9E9E8; padding: 10px 14px; background: #F7F6F3; font-weight: bold; text-align: left; white-space: nowrap; display: table-cell;',
-  td: 'border: 1px solid #E9E9E8; padding: 10px 14px; text-align: left; min-width: 100px; display: table-cell;',
+  th: 'border: 1px solid #E9E9E8; padding: 10px 14px; background: #F7F6F3; font-weight: bold; text-align: left; white-space: nowrap; display: table-cell; color: #373530;',
+  td: 'border: 1px solid #E9E9E8; padding: 10px 14px; text-align: left; min-width: 100px; display: table-cell; color: #373530;',
 };
 
 export class MarkdownEngine {
@@ -43,7 +47,6 @@ export class MarkdownEngine {
 
   private setup() {
     const self = this;
-
     const extensions: any[] = [
       {
         name: 'underline',
@@ -53,7 +56,7 @@ export class MarkdownEngine {
           const match = /^<u>([\s\S]+?)<\/u>/.exec(src);
           if (match) return { type: 'underline', raw: match[0], text: match[1] };
         },
-        renderer(token: any) { return `<span style="${STYLES.u}">${(this as any).parser.parseInline(token.tokens || [])}</span>`; }
+        renderer(token: any) { return `<span style="${S.u}">${(this as any).parser.parseInline(token.tokens || [])}</span>`; }
       },
       {
         name: 'mark',
@@ -63,7 +66,7 @@ export class MarkdownEngine {
           const match = /^==([\s\S]+?)==/.exec(src);
           if (match) return { type: 'mark', raw: match[0], text: match[1] };
         },
-        renderer(token: any) { return `<mark style="${STYLES.mark}">${(this as any).parser.parseInline(token.tokens || [])}</mark>`; }
+        renderer(token: any) { return `<mark style="${S.mark}">${(this as any).parser.parseInline(token.tokens || [])}</mark>`; }
       }
     ];
 
@@ -72,24 +75,24 @@ export class MarkdownEngine {
       breaks: true,
       extensions,
       renderer: {
-        strong({ text }: any) { return `<strong style="${STYLES.strong}">${text}</strong>`; },
-        em({ text }: any) { return `<em style="${STYLES.em}">${text}</em>`; },
-        del({ text }: any) { return `<del style="${STYLES.del}">${text}</del>`; },
-        codespan({ text }: any) { return `<code style="${STYLES.code}">${text}</code>`; },
+        strong({ text }: any) { return `<strong style="${S.strong}">${text}</strong>`; },
+        em({ text }: any) { return `<em style="${S.em}">${text}</em>`; },
+        del({ text }: any) { return `<del style="${S.del}">${text}</del>`; },
+        codespan({ text }: any) { return `<code style="${S.code}">${text}</code>`; },
         heading({ text, depth }: any) {
-          const styles = [STYLES.h1, STYLES.h2, STYLES.h3, STYLES.h3, STYLES.h3, STYLES.h3];
-          const style = styles[depth - 1] || STYLES.h3;
+          const styles = [S.h1, S.h2, S.h3, S.h3, S.h3, S.h3];
+          const style = styles[depth - 1] || S.h3;
           return `<h${depth} style="${style}">${text}</h${depth}>`;
         },
-        paragraph({ text }: any) { return `<p style="${STYLES.p}">${text}</p>`; },
-        blockquote({ text }: any) { return `<blockquote style="${STYLES.blockquote}">${text}</blockquote>`; },
-        hr() { return `<hr style="${STYLES.hr}" />`; },
+        paragraph({ text }: any) { return `<p style="${S.p}">${text}</p>`; },
+        blockquote({ text }: any) { return `<blockquote style="${S.blockquote}">${text}</blockquote>`; },
+        hr() { return `<hr style="${S.hr}" />`; },
         list(token: any) {
           const tag = token.ordered ? 'ol' : 'ul';
-          const style = token.ordered ? STYLES.ol : STYLES.ul;
+          const style = token.ordered ? S.ol : S.ul;
           const body = token.items.map((item: any) => {
             const checked = item.task ? (item.checked ? '☑️ ' : '⬜ ') : '';
-            return `<li style="${STYLES.li}">${checked}${item.text}</li>`;
+            return `<li style="${S.li}">${checked}${item.text}</li>`;
           }).join('');
           return `<${tag} style="${style}">${body}</${tag}>`;
         },
@@ -101,20 +104,20 @@ export class MarkdownEngine {
               highlighted = Prism.highlight(text, Prism.languages[language], language);
             }
           } catch (e) {}
-          return `<pre style="${STYLES.pre}"><code style="font-family:inherit; white-space:pre;">${highlighted}</code></pre>`;
+          return `<pre style="${S.pre}"><code style="font-family:inherit; white-space:pre;">${highlighted}</code></pre>`;
         },
         link({ href, text }: any) {
-          if (href.startsWith('#')) return `<span style="${STYLES.a}">${text}</span>`;
+          if (href.startsWith('#')) return `<span style="${S.a}">${text}</span>`;
           self.footnotes.push({ title: text, url: href });
-          return `<span style="${STYLES.a}">${text}</span><sup style="font-size:10px; color:#787774; margin-left:2px;">[${self.footnotes.length}]</sup>`;
+          return `<span style="${S.a}">${text}</span><sup style="font-size:10px; color:#787774; margin-left:2px;">[${self.footnotes.length}]</sup>`;
         },
         image({ href, text, title }: any) {
-          return `<img src="${href}" alt="${text}" title="${title || ''}" style="${STYLES.img}" />`;
+          return `<img src="${href}" alt="${text}" title="${title || ''}" style="${S.img}" />`;
         },
         table({ header, rows }: any) {
-          const hHtml = header.map((c: any) => `<th style="${STYLES.th}">${c.text}</th>`).join('');
-          const bHtml = rows.map((r: any) => `<tr>${r.map((c: any) => `<td style="${STYLES.td}">${c.text}</td>`).join('')}</tr>`).join('');
-          return `<div style="${STYLES.tableWrapper}"><table style="${STYLES.table}"><thead><tr>${hHtml}</tr></thead><tbody>${bHtml}</tbody></table></div>`;
+          const hHtml = header.map((c: any) => `<th style="${S.th}">${c.text}</th>`).join('');
+          const bHtml = rows.map((r: any) => `<tr>${r.map((c: any) => `<td style="${S.td}">${c.text}</td>`).join('')}</tr>`).join('');
+          return `<section style="${S.tableWrapper}"><table style="${S.table}"><thead><tr>${hHtml}</tr></thead><tbody>${bHtml}</tbody></table></section>`;
         }
       }
     });
@@ -123,43 +126,32 @@ export class MarkdownEngine {
   private renderInline(text: string): string {
     let html = text;
     const placeholders: string[] = [];
-
     html = html.replace(/`([\s\S]+?)`/g, (_, code) => {
       const id = `⦓${placeholders.length}⦔`;
-      placeholders.push(`<code style="${STYLES.code}">${code}</code>`);
+      placeholders.push(`<code style="${S.code}">${code}</code>`);
       return id;
     });
-
     const escapePlaceholders: string[] = [];
     html = html.replace(/\\([\*\_\`\#\-\+\>\!\(\)\[\]\\])/g, (_, char) => {
       const id = `⦔${escapePlaceholders.length}⦓`;
       escapePlaceholders.push(char);
       return id;
     });
-
-    html = html.replace(/\*\*\*([\s\S]+?)\*\*\*/g, `<strong style="${STYLES.strong}"><em style="${STYLES.em}">$1</em></strong>`);
-    html = html.replace(/\*\*([\s\S]+?)\*\*/g, `<strong style="${STYLES.strong}">$1</strong>`);
-    html = html.replace(/__([\s\S]+?)__/g, `<strong style="${STYLES.strong}">$1</strong>`);
-    html = html.replace(/\*([\s\S]+?)\*/g, `<em style="${STYLES.em}">$1</em>`);
-    html = html.replace(/_([\s\S]+?)_/g, `<em style="${STYLES.em}">$1</em>`);
-    html = html.replace(/~~([\s\S]+?)~~/g, `<del style="${STYLES.del}">$1</del>`);
-    html = html.replace(/==([\s\S]+?)==/g, `<mark style="${STYLES.mark}">$1</mark>`);
-    html = html.replace(/<u>([\s\S]+?)<\/u>/g, `<span style="${STYLES.u}">$1</span>`);
-
+    html = html.replace(/\*\*\*([\s\S]+?)\*\*\*/g, `<strong style="${S.strong}"><em style="${S.em}">$1</em></strong>`);
+    html = html.replace(/\*\*([\s\S]+?)\*\*/g, `<strong style="${S.strong}">$1</strong>`);
+    html = html.replace(/__([\s\S]+?)__/g, `<strong style="${S.strong}">$1</strong>`);
+    html = html.replace(/\*([\s\S]+?)\*/g, `<em style="${S.em}">$1</em>`);
+    html = html.replace(/_([\s\S]+?)_/g, `<em style="${S.em}">$1</em>`);
+    html = html.replace(/~~([\s\S]+?)~~/g, `<del style="${S.del}">$1</del>`);
+    html = html.replace(/==([\s\S]+?)==/g, `<mark style="${S.mark}">$1</mark>`);
+    html = html.replace(/<u>([\s\S]+?)<\/u>/g, `<span style="${S.u}">$1</span>`);
     html = html.replace(/\[([\s\S]+?)\]\(([\s\S]+?)\)/g, (_, label, href) => {
-      if (href.startsWith('#')) return `<span style="${STYLES.a}">${label}</span>`;
+      if (href.startsWith('#')) return `<span style="${S.a}">${label}</span>`;
       this.footnotes.push({ title: label, url: href });
-      return `<span style="${STYLES.a}">${label}</span><sup style="font-size:10px; color:#787774; margin-left:2px;">[${this.footnotes.length}]</sup>`;
+      return `<span style="${S.a}">${label}</span><sup style="font-size:10px; color:#787774; margin-left:2px;">[${this.footnotes.length}]</sup>`;
     });
-
-    escapePlaceholders.forEach((char, i) => {
-      html = html.split(`⦔${i}⦓`).join(char);
-    });
-
-    placeholders.forEach((val, i) => {
-      html = html.split(`⦓${i}⦔`).join(val);
-    });
-
+    escapePlaceholders.forEach((char, i) => { html = html.split(`⦔${i}⦓`).join(char); });
+    placeholders.forEach((val, i) => { html = html.split(`⦓${i}⦔`).join(val); });
     return html;
   }
 
@@ -169,17 +161,20 @@ export class MarkdownEngine {
       let content = markdown;
       const calloutBlocks: string[] = [];
 
-      // 1. 预处理：保护 Callout 区块，防止被 lexer 拆散
       content = content.replace(/^:::callout\s+([\s\S]+?)\n:::/gm, (_, inner) => {
         const id = `__CALLOUT_BLOCK_${calloutBlocks.length}__`;
         const m = inner.match(/^([\uD800-\uDBFF][\uDC00-\uDFFF]|[\u2600-\u27BF])\s?([\s\S]+)$/);
         const icon = m ? m[1] : '💡';
         const text = m ? m[2] : inner;
         
-        calloutBlocks.push(`<div style="margin: 1.5em 0; padding: 1.2em; background: #F1F1EF; border-radius: 4px; display: flex; align-items: flex-start; gap: 0.8em; border: 1px solid #E9E9E8;">
-          <div style="font-size: 1.3em; line-height: 1; flex-shrink: 0;">${icon}</div>
-          <div style="flex: 1; color: #373530; font-size: 16px; line-height: 1.6;">${this.renderInline(text.trim())}</div>
-        </div>`);
+        // 微信适配核心：使用 table 模拟 flex，确保背景色、圆角和对齐在粘贴后不丢失
+        const tableStyle = 'width: 100%; margin: 1.5em 0; background: #F1F1EF; border-radius: 4px; border: 1px solid #E9E9E8; border-collapse: separate;';
+        calloutBlocks.push(`<table style="${tableStyle}">
+          <tr>
+            <td style="padding: 1.2em 0.5em 1.2em 1.2em; vertical-align: top; width: 1.5em; font-size: 1.3em; line-height: 1;">${icon}</td>
+            <td style="padding: 1.2em 1.2em 1.2em 0.5em; vertical-align: top; color: #373530; font-size: 16px; line-height: 1.6;">${this.renderInline(text.trim())}</td>
+          </tr>
+        </table>`);
         return `\n\n${id}\n\n`;
       });
 
@@ -189,74 +184,56 @@ export class MarkdownEngine {
       tokens.forEach((token: Token) => {
         switch (token.type) {
           case 'heading':
-            const styles = [STYLES.h1, STYLES.h2, STYLES.h3, STYLES.h3, STYLES.h3, STYLES.h3];
-            const hStyle = styles[token.depth - 1] || STYLES.h3;
+            const hStyle = ([S.h1, S.h2, S.h3, S.h3, S.h3, S.h3] as any)[token.depth - 1] || S.h3;
             html += `<h${token.depth} style="${hStyle}">${this.renderInline(token.text)}</h${token.depth}>`;
             break;
           case 'paragraph':
-            // 检查是否是 Callout 占位符
             const pText = token.text.trim();
             if (pText.startsWith('__CALLOUT_BLOCK_') && pText.endsWith('__')) {
-              html += pText; // 暂时原样放入，后面统一还原
+              html += pText;
             } else {
-              html += `<p style="${STYLES.p}">${this.renderInline(token.text)}</p>`;
+              html += `<p style="${S.p}">${this.renderInline(token.text)}</p>`;
             }
             break;
           case 'blockquote':
-            html += `<blockquote style="${STYLES.blockquote}">${this.render(token.text)}</blockquote>`;
+            html += `<blockquote style="${S.blockquote}">${this.render(token.text)}</blockquote>`;
             break;
           case 'list':
             const tag = token.ordered ? 'ol' : 'ul';
-            const lStyle = token.ordered ? STYLES.ol : STYLES.ul;
+            const lStyle = token.ordered ? S.ol : S.ul;
             let listBody = '';
             token.items.forEach((item: any) => {
               const content = item.task ? `${item.checked ? '☑️' : '⬜'} ${item.text}` : item.text;
-              listBody += `<li style="${STYLES.li}">${this.renderInline(content)}</li>`;
+              listBody += `<li style="${S.li}">${this.renderInline(content)}</li>`;
             });
             html += `<${tag} style="${lStyle}">${listBody}</${tag}>`;
             break;
           case 'code':
             let highlighted = token.text;
-            try {
-              if (Prism.languages[token.lang || 'javascript']) {
-                highlighted = Prism.highlight(token.text, Prism.languages[token.lang || 'javascript'], token.lang || 'javascript');
-              }
-            } catch (e) {}
-            html += `<pre style="${STYLES.pre}"><code style="font-family:inherit; white-space:pre;">${highlighted}</code></pre>`;
+            try { if (Prism.languages[token.lang || 'javascript']) { highlighted = Prism.highlight(token.text, Prism.languages[token.lang || 'javascript'], token.lang || 'javascript'); } } catch (e) {}
+            html += `<pre style="${S.pre}"><code style="font-family:inherit; white-space:pre;">${highlighted}</code></pre>`;
             break;
           case 'table':
-            const header = token.header.map((c: any) => `<th style="${STYLES.th}">${this.renderInline(c.text)}</th>`).join('');
-            const rows = token.rows.map((r: any) => `<tr>${r.map((c: any) => `<td style="${STYLES.td}">${this.renderInline(c.text)}</td>`).join('')}</tr>`).join('');
-            html += `<div style="${STYLES.tableWrapper}"><table style="${STYLES.table}"><thead><tr>${header}</tr></thead><tbody>${rows}</tbody></table></div>`;
+            const header = token.header.map((c: any) => `<th style="${S.th}">${this.renderInline(c.text)}</th>`).join('');
+            const rows = token.rows.map((r: any) => `<tr>${r.map((c: any) => `<td style="${S.td}">${this.renderInline(c.text)}</td>`).join('')}</tr>`).join('');
+            // 使用 section 包装 table 增加微信后台的识别率
+            html += `<section style="${S.tableWrapper}"><table style="${S.table}"><thead><tr>${header}</tr></thead><tbody>${rows}</tbody></table></section>`;
             break;
-          case 'hr':
-            html += `<hr style="${STYLES.hr}" />`;
-            break;
-          case 'space':
-            break;
-          default:
-            html += token.raw;
+          case 'hr': html += `<hr style="${S.hr}" />`; break;
+          default: html += token.raw;
         }
       });
 
-      // 2. 还原 Callout 区块
-      calloutBlocks.forEach((blockHtml, i) => {
-        html = html.replace(`__CALLOUT_BLOCK_${i}__`, blockHtml);
-      });
+      calloutBlocks.forEach((blockHtml, i) => { html = html.replace(`__CALLOUT_BLOCK_${i}__`, blockHtml); });
 
       if (this.footnotes.length > 0) {
         html += '<div style="margin-top:40px; border-top:1px solid #E9E9E8; padding-top:20px; display:block;">';
         html += '<h4 style="font-size:14px; font-weight:bold; color:#787774; margin-bottom:12px; display:block;">参考资料</h4>';
-        this.footnotes.forEach((fn, i) => {
-          html += `<p style="font-size:12px; color:#787774; margin:6px 0; line-height:1.6; display:block;">[${i + 1}] ${fn.title}: ${fn.url}</p>`;
-        });
+        this.footnotes.forEach((fn, i) => { html += `<p style="font-size:12px; color:#787774; margin:6px 0; line-height:1.6; display:block;">[${i + 1}] ${fn.title}: ${fn.url}</p>`; });
         html += '</div>';
       }
-
       return html;
-    } catch (e) {
-      return `<p style="color:red;">Render Error: ${e}</p>`;
-    }
+    } catch (e) { return `<p style="color:red;">Render Error: ${e}</p>`; }
   }
 }
 
