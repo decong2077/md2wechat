@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { engine } from './lib/MarkdownEngine';
+import defaultMarkdown from '../Markdown.md?raw';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -11,42 +12,9 @@ function cn(...inputs: ClassValue[]) {
 
 const STORAGE_KEY = 'md2wechat-draft-v2';
 
-const DEFAULT_MARKDOWN = `# Markdown 全格式测试 ✨
-
-:::callout 💡 提示
-本工具已重构，现在能 100% 支持所有 Markdown 格式，并适配微信公众号。
-:::
-
----
-
-## 文本样式演示
-
-- **这是粗体** (Bold)
-- *这是斜体* (Italic)
-- ***这是粗斜体*** (Bold Italic)
-- ~~这是删除线~~ (Strikethrough)
-- <u>这是下划线</u> (Underline)
-- ==这是高亮== (Highlight)
-- \`这是行内代码\` (Inline Code)
-
-### 链接与脚注
-这是一个[外部链接](https://github.com)，它会被自动转换为文末脚注。
-
-### 代码块测试
-\`\`\`python
-def hello():
-    print("Hello, WeChat!")
-\`\`\`
-
-### 表格横向滑动测试
-| 标题一 | 标题二 | 标题三 | 标题四 | 标题五 | 标题六 |
-| :--- | :---: | ---: | :--- | :--- | :--- |
-| 很长的内容 | 数据B | 100 | 更多内容 | 更多内容 | 更多内容 |
-`;
-
 export default function App() {
   const [markdown, setMarkdown] = useState(() => {
-    return localStorage.getItem(STORAGE_KEY) || DEFAULT_MARKDOWN;
+    return localStorage.getItem(STORAGE_KEY) || defaultMarkdown;
   });
   const [html, setHtml] = useState('');
   const [isCopied, setIsCopied] = useState(false);
