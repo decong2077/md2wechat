@@ -30,6 +30,9 @@ const S = {
   blockquote: 'margin: 1.5em 0; padding: 0.5em 1.2em; border-left: 4px solid #373530; color: #373530; background: #F1F1EF; border-radius: 3px; display: block;',
   ul: 'margin: 1em 0; padding-left: 1.5em; list-style-type: disc; display: block;',
   ol: 'margin: 1em 0; padding-left: 1.5em; list-style-type: decimal; display: block;',
+  /** 嵌套列表：收紧外边距，避免微信里层级挤成一团 */
+  ulNested: 'margin: 0.35em 0; padding-left: 1.5em; display: block;',
+  olNested: 'margin: 0.35em 0; padding-left: 1.5em; list-style-type: decimal; display: block;',
   li: 'margin: 0.5em 0; line-height: 1.6; display: list-item;',
   hr: 'border: none; border-top: 1px solid #E9E9E8; margin: 2em 0; display: block;',
   a: 'color: #487CA5; text-decoration: underline; display: inline;',
@@ -138,6 +141,8 @@ function buildCodeBlockHtml(raw: string, lang: string | undefined): string {
   return `<pre style="${S.pre}"><code style="${S.codeBlock}">${inner}</code></pre>`;
 }
 
+const NESTED_UL_MARKERS = ['circle', 'square', 'disc'] as const;
+
 export class MarkdownEngine {
   private markedInstance: Marked;
   private footnotes: { title: string; url: string }[] = [];
@@ -145,6 +150,60 @@ export class MarkdownEngine {
   constructor() {
     this.markedInstance = new Marked();
     this.setup();
+  }
+
+  /** 无序列表嵌套时轮换 bullet，便于区分层级 */
+  private listContainerStyle(ordered: boolean, depth: number): string {
+    if (ordered) {
+      return depth === 0 ? S.ol : S.olNested;
+    }
+    if (depth === 0) return S.ul;
+    const marker = NESTED_UL_MARKERS[Math.min(depth - 1, NESTED_UL_MARKERS.length - 1)];
+    return `${S.ulNested} list-style-type: ${marker};`;
+  }
+
+  /** 递归渲染 list_item.tokens（含嵌套 list、GFM checkbox、多段 paragraph） */
+  private renderListItemInner(item: any, depth: number): string {
+    const tokens: any[] | undefined = item.tokens;
+    if (!tokens || tokens.length === 0) {
+      const check = item.task ? (item.checked ? '☑️ ' : '⬜ ') : '';
+      return `${check}${this.renderInline(item.text || '')}`;
+    }
+    let out = '';
+    for (const t of tokens) {
+      switch (t.type) {
+        case 'checkbox':
+          out += t.checked ? '☑️ ' : '⬜ ';
+          break;
+        case 'text':
+          out += this.renderInline(t.text || '');
+          break;
+        case 'paragraph':
+          out += `<span style="display:block;margin:0.25em 0;">${this.renderInline(t.text || '')}</span>`;
+          break;
+        case 'list':
+          out += this.renderListHtml(t, depth + 1);
+          break;
+        case 'space':
+          break;
+        default:
+          out += this.renderInline(t.text ?? t.raw ?? '');
+      }
+    }
+    return out;
+  }
+
+  private renderListHtml(listToken: any, depth: number): string {
+    const tag = listToken.ordered ? 'ol' : 'ul';
+    const style = this.listContainerStyle(!!listToken.ordered, depth);
+    const startAttr =
+      listToken.ordered && listToken.start != null && Number(listToken.start) !== 1
+        ? ` start="${Number(listToken.start)}"`
+        : '';
+    const body = listToken.items
+      .map((item: any) => `<li style="${S.li}">${this.renderListItemInner(item, depth)}</li>`)
+      .join('');
+    return `<${tag}${startAttr} style="${style}">${body}</${tag}>`;
   }
 
   private setup() {
@@ -190,13 +249,7 @@ export class MarkdownEngine {
         blockquote({ text }: any) { return `<blockquote style="${S.blockquote}">${text}</blockquote>`; },
         hr() { return `<hr style="${S.hr}" />`; },
         list(token: any) {
-          const tag = token.ordered ? 'ol' : 'ul';
-          const style = token.ordered ? S.ol : S.ul;
-          const body = token.items.map((item: any) => {
-            const checked = item.task ? (item.checked ? '☑️ ' : '⬜ ') : '';
-            return `<li style="${S.li}">${checked}${item.text}</li>`;
-          }).join('');
-          return `<${tag} style="${style}">${body}</${tag}>`;
+          return self.renderListHtml(token, 0);
         },
         code({ text, lang }: any) {
           return buildCodeBlockHtml(text, lang);
@@ -294,14 +347,7 @@ export class MarkdownEngine {
             html += `<blockquote style="${S.blockquote}">${this.render(token.text)}</blockquote>`;
             break;
           case 'list':
-            const tag = token.ordered ? 'ol' : 'ul';
-            const lStyle = token.ordered ? S.ol : S.ul;
-            let listBody = '';
-            token.items.forEach((item: any) => {
-              const content = item.task ? `${item.checked ? '☑️' : '⬜'} ${item.text}` : item.text;
-              listBody += `<li style="${S.li}">${this.renderInline(content)}</li>`;
-            });
-            html += `<${tag} style="${lStyle}">${listBody}</${tag}>`;
+            html += this.renderListHtml(token, 0);
             break;
           case 'code':
             html += buildCodeBlockHtml(token.text, token.lang);
