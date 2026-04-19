@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Copy, Type, LayoutDashboard, Github, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx, type ClassValue } from 'clsx';
@@ -50,7 +50,6 @@ export default function App() {
   });
   const [html, setHtml] = useState('');
   const [isCopied, setIsCopied] = useState(false);
-  const previewRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, markdown);
@@ -58,11 +57,11 @@ export default function App() {
   }, [markdown]);
 
   const handleCopy = async () => {
-    if (!previewRef.current) return;
     try {
-      const previewHtml = previewRef.current.innerHTML;
+      // 必须用渲染产物字符串，不能用 innerHTML：浏览器序列化 DOM 时会折叠/改写空白，
+      // 与 MarkdownEngine 里为微信准备的 nbsp / <br /> 冲突。
       const type = 'text/html';
-      const blob = new Blob([previewHtml], { type });
+      const blob = new Blob([html], { type });
       const data = [new ClipboardItem({ [type]: blob })];
       await navigator.clipboard.write(data);
       setIsCopied(true);
@@ -126,7 +125,6 @@ export default function App() {
             <div className="max-w-[677px] mx-auto w-full">
               {/* 核心渲染容器 */}
               <div 
-                ref={previewRef}
                 style={{ all: 'revert' }}
                 className="notion-viewer"
                 dangerouslySetInnerHTML={{ __html: html }}

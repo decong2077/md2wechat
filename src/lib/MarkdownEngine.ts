@@ -24,7 +24,9 @@ const S = {
   u: 'text-decoration: underline !important; display: inline !important;',
   mark: 'background-color: #FAF3DD !important; color: #373530 !important; padding: 0 2px; border-radius: 2px; display: inline !important;',
   code: 'font-family: Menlo, Monaco, Consolas, monospace; font-size: 0.9em; background: #F7F6F3; padding: 0.2em 0.4em; border-radius: 3px; color: #373530; font-weight: 500; display: inline !important;',
-  pre: 'background: #F7F6F3; padding: 1.2em; border-radius: 5px; overflow-x: auto; margin: 1.2em 0; line-height: 1.5; font-size: 14px; border: 1px solid #E9E9E8; display: block;',
+  pre: 'background: #F7F6F3; padding: 1.2em; border-radius: 5px; overflow-x: auto; margin: 1.2em 0; line-height: 1.5; font-size: 14px; border: 1px solid #E9E9E8; display: block; white-space: pre-wrap; word-wrap: break-word;',
+  /** 公众号常丢弃 pre 的空白保留：配合 nbsp / br 使用 */
+  codeBlock: 'font-family: Menlo, Monaco, Consolas, monospace; white-space: pre-wrap; word-wrap: break-word; display: block;',
   blockquote: 'margin: 1.5em 0; padding: 0.5em 1.2em; border-left: 4px solid #373530; color: #373530; background: #F1F1EF; border-radius: 3px; display: block;',
   ul: 'margin: 1em 0; padding-left: 1.5em; list-style-type: disc; display: block;',
   ol: 'margin: 1em 0; padding-left: 1.5em; list-style-type: decimal; display: block;',
@@ -38,6 +40,103 @@ const S = {
   th: 'border: 1px solid #E9E9E8; padding: 10px 14px; background: #F7F6F3; font-weight: bold; text-align: left; white-space: nowrap; display: table-cell; color: #373530;',
   td: 'border: 1px solid #E9E9E8; padding: 10px 14px; text-align: left; min-width: 100px; display: table-cell; color: #373530;',
 };
+
+/** 与 src/index.css 中 Prism 主题一致；补充常见 token，供微信粘贴（无外链 CSS）时保留配色 */
+const PRISM_STYLES: Record<string, string> = {
+  comment: 'color: #787774;',
+  prolog: 'color: #787774;',
+  doctype: 'color: #787774;',
+  cdata: 'color: #787774;',
+  punctuation: 'color: #373530;',
+  operator: 'color: #373530;',
+  entity: 'color: #373530;',
+  url: 'color: #448BBA;',
+  variable: 'color: #373530;',
+  property: 'color: #EB5757;',
+  tag: 'color: #EB5757;',
+  boolean: 'color: #EB5757;',
+  number: 'color: #EB5757;',
+  constant: 'color: #EB5757;',
+  symbol: 'color: #EB5757;',
+  deleted: 'color: #EB5757;',
+  string: 'color: #448BBA;',
+  char: 'color: #448BBA;',
+  'attr-value': 'color: #448BBA;',
+  'attr-name': 'color: #487CA5;',
+  'template-string': 'color: #448BBA;',
+  'template-punctuation': 'color: #373530;',
+  regex: 'color: #548164;',
+  keyword: 'color: #487CA5;',
+  builtin: 'color: #D9730D;',
+  'class-name': 'color: #D9730D;',
+  function: 'color: #D9730D;',
+  important: 'color: #487CA5; font-weight: bold;',
+  atrule: 'color: #487CA5;',
+  rule: 'color: #487CA5;',
+  selector: 'color: #487CA5;',
+  inserted: 'color: #548164;',
+};
+
+const PRISM_STYLE_KEYS = Object.keys(PRISM_STYLES).sort((a, b) => b.length - a.length);
+
+const DEFAULT_TOKEN_STYLE = 'color: #373530;';
+
+/** 将 Prism 的 class="token …" 转为行内 style，避免微信后台丢弃外链样式后失色 */
+function prismHtmlToInlineStyles(html: string): string {
+  return html.replace(/<span\s+class="([^"]*)">/gi, (_, classList: string) => {
+    const classes = classList.split(/\s+/).filter(Boolean);
+    if (!classes.includes('token')) {
+      return `<span class="${classList}">`;
+    }
+    const types = classes.filter((c) => c !== 'token');
+    let style = DEFAULT_TOKEN_STYLE;
+    for (const key of PRISM_STYLE_KEYS) {
+      if (types.includes(key)) {
+        style = PRISM_STYLES[key];
+        break;
+      }
+    }
+    return `<span style="${style}">`;
+  });
+}
+
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+/** 微信后台易折叠空格、忽略换行：仅改写标签外的文本节点 */
+function preserveCodeWhitespaceForWeChat(html: string): string {
+  return html.split(/(<[^>]*>)/g).map((seg) => {
+    if (seg.startsWith('<')) return seg;
+    return seg
+      .replace(/\r\n/g, '\n')
+      .replace(/\r/g, '\n')
+      .replace(/ /g, '\u00a0')
+      .replace(/\t/g, '\u00a0\u00a0\u00a0\u00a0')
+      .replace(/\n/g, '<br />');
+  }).join('');
+}
+
+function buildCodeBlockHtml(raw: string, lang: string | undefined): string {
+  const language = lang || 'javascript';
+  let inner: string;
+  try {
+    if (Prism.languages[language]) {
+      inner = Prism.highlight(raw, Prism.languages[language], language);
+      inner = prismHtmlToInlineStyles(inner);
+      inner = preserveCodeWhitespaceForWeChat(inner);
+    } else {
+      inner = preserveCodeWhitespaceForWeChat(escapeHtml(raw));
+    }
+  } catch {
+    inner = preserveCodeWhitespaceForWeChat(escapeHtml(raw));
+  }
+  return `<pre style="${S.pre}"><code style="${S.codeBlock}">${inner}</code></pre>`;
+}
 
 export class MarkdownEngine {
   private markedInstance: Marked;
@@ -100,14 +199,7 @@ export class MarkdownEngine {
           return `<${tag} style="${style}">${body}</${tag}>`;
         },
         code({ text, lang }: any) {
-          const language = lang || 'javascript';
-          let highlighted = text;
-          try {
-            if (Prism.languages[language]) {
-              highlighted = Prism.highlight(text, Prism.languages[language], language);
-            }
-          } catch (e) {}
-          return `<pre style="${S.pre}"><code style="font-family:inherit; white-space:pre;">${highlighted}</code></pre>`;
+          return buildCodeBlockHtml(text, lang);
         },
         link({ href, text }: any) {
           if (href.startsWith('#')) return `<span style="${S.a}">${text}</span>`;
@@ -212,9 +304,7 @@ export class MarkdownEngine {
             html += `<${tag} style="${lStyle}">${listBody}</${tag}>`;
             break;
           case 'code':
-            let highlighted = token.text;
-            try { if (Prism.languages[token.lang || 'javascript']) { highlighted = Prism.highlight(token.text, Prism.languages[token.lang || 'javascript'], token.lang || 'javascript'); } } catch (e) {}
-            html += `<pre style="${S.pre}"><code style="font-family:inherit; white-space:pre;">${highlighted}</code></pre>`;
+            html += buildCodeBlockHtml(token.text, token.lang);
             break;
           case 'table':
             const header = token.header.map((c: any) => `<th style="${S.th}">${this.renderInline(c.text)}</th>`).join('');
