@@ -85,10 +85,10 @@ Please report this to https://github.com/markedjs/marked.`,e){let e=`<p>An error
             <td style="padding: 1.2em 0.5em 1.2em 1.2em; vertical-align: top; width: 1.5em; font-size: 1.3em; line-height: 1;">${a}</td>
             <td style="padding: 1.2em 1.2em 1.2em 0.5em; vertical-align: top; color: #373530; font-size: 16px; line-height: 1.6;">${this.renderInline(o.trim())}</td>
           </tr>
-        </table>`),`\n\n${r}\n\n`});let r=this.markedInstance.lexer(t),i=``;return r.forEach(e=>{switch(e.type){case`heading`:let t=[$.h1,$.h2,$.h3,$.h4,$.h5,$.h6][e.depth-1]||$.h3;i+=`<h${e.depth} style="${t}">${this.renderInline(e.text)}</h${e.depth}>`;break;case`paragraph`:let n=e.text.trim();n.startsWith(`__CALLOUT_BLOCK_`)&&n.endsWith(`__`)?i+=n:i+=`<p style="${$.p}">${this.renderInline(e.text)}</p>`;break;case`blockquote`:i+=`<blockquote style="${$.blockquote}">${this.render(e.text)}</blockquote>`;break;case`list`:i+=this.renderListHtml(e,0);break;case`code`:i+=Gp(e.text,e.lang);break;case`table`:let r=e.header.map(e=>`<th style="${$.th}">${this.renderInline(e.text)}</th>`).join(``),a=e.rows.map(e=>`<tr>${e.map(e=>`<td style="${$.td}">${this.renderInline(e.text)}</td>`).join(``)}</tr>`).join(``);i+=`<section style="${$.tableWrapper}"><table style="${$.table}"><thead><tr>${r}</tr></thead><tbody>${a}</tbody></table></section>`;break;case`hr`:i+=`<hr style="${$.hr}" />`;break;default:i+=e.raw}}),n.forEach((e,t)=>{i=i.replace(`__CALLOUT_BLOCK_${t}__`,e)}),this.footnotes.length>0&&(i+=`<div style="margin-top:40px; border-top:1px solid #E9E9E8; padding-top:20px; display:block;">`,i+=`<h4 style="font-size:14px; font-weight:bold; color:#787774; margin-bottom:12px; display:block;">参考资料</h4>`,this.footnotes.forEach((e,t)=>{i+=`<p style="font-size:12px; color:#787774; margin:6px 0; line-height:1.6; display:block;">[${t+1}] ${e.title}: ${e.url}</p>`}),i+=`</div>`),i}catch(e){return`<p style="color:red;">Render Error: ${e}</p>`}}};function Jp(...e){return sf(Bu(e))}var Yp=`md2wechat-draft-v2`,Xp=`# Markdown 全格式测试 ✨
+        </table>`),`\n\n${r}\n\n`});let r=this.markedInstance.lexer(t),i=``;return r.forEach(e=>{switch(e.type){case`heading`:let t=[$.h1,$.h2,$.h3,$.h4,$.h5,$.h6][e.depth-1]||$.h3;i+=`<h${e.depth} style="${t}">${this.renderInline(e.text)}</h${e.depth}>`;break;case`paragraph`:let n=e.text.trim();n.startsWith(`__CALLOUT_BLOCK_`)&&n.endsWith(`__`)?i+=n:i+=`<p style="${$.p}">${this.renderInline(e.text)}</p>`;break;case`blockquote`:i+=`<blockquote style="${$.blockquote}">${this.render(e.text)}</blockquote>`;break;case`list`:i+=this.renderListHtml(e,0);break;case`code`:i+=Gp(e.text,e.lang);break;case`table`:let r=e.header.map(e=>`<th style="${$.th}">${this.renderInline(e.text)}</th>`).join(``),a=e.rows.map(e=>`<tr>${e.map(e=>`<td style="${$.td}">${this.renderInline(e.text)}</td>`).join(``)}</tr>`).join(``);i+=`<section style="${$.tableWrapper}"><table style="${$.table}"><thead><tr>${r}</tr></thead><tbody>${a}</tbody></table></section>`;break;case`hr`:i+=`<hr style="${$.hr}" />`;break;default:i+=e.raw}}),n.forEach((e,t)=>{i=i.replace(`__CALLOUT_BLOCK_${t}__`,e)}),this.footnotes.length>0&&(i+=`<div style="margin-top:40px; border-top:1px solid #E9E9E8; padding-top:20px; display:block;">`,i+=`<h4 style="font-size:14px; font-weight:bold; color:#787774; margin-bottom:12px; display:block;">参考资料</h4>`,this.footnotes.forEach((e,t)=>{i+=`<p style="font-size:12px; color:#787774; margin:6px 0; line-height:1.6; display:block;">[${t+1}] ${e.title}: ${e.url}</p>`}),i+=`</div>`),i}catch(e){return`<p style="color:red;">Render Error: ${e}</p>`}}};function Jp(...e){return sf(Bu(e))}var Yp=`md2wechat-draft-v2`;function Xp(){let[e,t]=(0,b.useState)(()=>localStorage.getItem(Yp)||`# Markdown 格式测试 ✨
 
 :::callout 💡 提示
-本工具已重构，现在能 100% 支持所有 Markdown 格式，并适配微信公众号。
+本工具已重构，现在能支持大部分 Markdown 格式，并适配微信公众号。
 :::
 
 ---
@@ -116,4 +116,236 @@ def hello():
 | 标题一 | 标题二 | 标题三 | 标题四 | 标题五 | 标题六 |
 | :--- | :---: | ---: | :--- | :--- | :--- |
 | 很长的内容 | 数据B | 100 | 更多内容 | 更多内容 | 更多内容 |
-`;function Zp(){let[e,t]=(0,b.useState)(()=>localStorage.getItem(Yp)||Xp),[n,r]=(0,b.useState)(``),[i,a]=(0,b.useState)(!1);return(0,b.useEffect)(()=>{localStorage.setItem(Yp,e),r(qp.render(e))},[e]),(0,z.jsxs)(`div`,{className:`flex flex-col h-screen bg-white text-[#373530] overflow-hidden font-sans`,children:[(0,z.jsxs)(`header`,{className:`flex items-center justify-between px-6 py-2 border-b border-[#E9E9E8] h-14 bg-white z-20 shrink-0`,children:[(0,z.jsxs)(`div`,{className:`flex items-center gap-2`,children:[(0,z.jsx)(`div`,{className:`w-8 h-8 bg-[#373530] rounded-[3px] flex items-center justify-center text-white font-bold text-xs`,children:`M`}),(0,z.jsx)(`span`,{className:`font-semibold text-sm`,children:`md2wechat`})]}),(0,z.jsxs)(`div`,{className:`flex items-center gap-2`,children:[(0,z.jsxs)(`button`,{className:`px-3 py-1.5 text-sm text-[#787774] hover:bg-[#F1F1EF] rounded-[3px] flex items-center gap-2 opacity-50 cursor-not-allowed`,children:[(0,z.jsx)(ne,{size:16}),(0,z.jsx)(`span`,{children:`主题`})]}),(0,z.jsx)(`button`,{onClick:async()=>{try{let e=`text/html`,t=new Blob([n],{type:e}),r=[new ClipboardItem({[e]:t})];await navigator.clipboard.write(r),a(!0),setTimeout(()=>a(!1),2e3)}catch{alert(`复制失败，请重试`)}},className:Jp(`px-4 py-1.5 text-sm font-medium rounded-[3px] shadow-sm flex items-center gap-2 transition-all duration-300 min-w-[140px] justify-center`,i?`bg-[#548164] text-white`:`bg-[#487CA5] text-white hover:bg-[#3b6685]`),children:(0,z.jsx)(qc,{mode:`wait`,children:i?(0,z.jsxs)(Ru.div,{initial:{y:5,opacity:0},animate:{y:0,opacity:1},exit:{y:-5,opacity:0},className:`flex items-center gap-2`,children:[(0,z.jsx)(re,{size:16}),` `,(0,z.jsx)(`span`,{children:`已复制!`})]},`c`):(0,z.jsxs)(Ru.div,{initial:{y:5,opacity:0},animate:{y:0,opacity:1},exit:{y:-5,opacity:0},className:`flex items-center gap-2`,children:[(0,z.jsx)(ee,{size:16}),` `,(0,z.jsx)(`span`,{children:`复制到公众号`})]},`n`)})}),(0,z.jsx)(`div`,{className:`w-px h-6 bg-[#E9E9E8] mx-2`}),(0,z.jsx)(`a`,{href:`https://github.com`,target:`_blank`,rel:`noreferrer`,className:`p-2 text-[#787774] hover:text-[#373530]`,children:(0,z.jsx)(te,{size:18})})]})]}),(0,z.jsxs)(`main`,{className:`flex flex-1 overflow-hidden`,children:[(0,z.jsxs)(`section`,{className:`flex-1 flex flex-col border-r border-[#E9E9E8] bg-[#FBFAFB]`,children:[(0,z.jsx)(`div`,{className:`px-4 py-2 text-[10px] uppercase font-bold tracking-widest text-[#787774] border-b border-[#E9E9E8]`,children:`Editor`}),(0,z.jsx)(`textarea`,{value:e,onChange:e=>t(e.target.value),className:`flex-1 p-8 bg-transparent outline-none resize-none font-mono text-[14px] leading-relaxed overflow-y-auto`,placeholder:`Type your markdown here...`})]}),(0,z.jsxs)(`section`,{className:`flex-1 flex flex-col bg-white overflow-hidden`,children:[(0,z.jsx)(`div`,{className:`px-4 py-2 text-[10px] uppercase font-bold tracking-widest text-[#787774] border-b border-[#E9E9E8] sticky top-0 bg-white/95 backdrop-blur z-10`,children:`Preview`}),(0,z.jsx)(`div`,{className:`flex-1 overflow-y-auto py-12 px-8`,children:(0,z.jsx)(`div`,{className:`max-w-[677px] mx-auto w-full`,children:(0,z.jsx)(`div`,{style:{all:`revert`},className:`notion-viewer`,dangerouslySetInnerHTML:{__html:n}})})})]})]}),(0,z.jsxs)(`footer`,{className:`px-4 py-1.5 border-t border-[#E9E9E8] bg-white text-[11px] text-[#787774] flex justify-between items-center shrink-0`,children:[(0,z.jsxs)(`div`,{className:`flex items-center gap-2`,children:[(0,z.jsx)(`span`,{className:`w-2 h-2 rounded-full bg-[#548164]`}),(0,z.jsx)(`span`,{children:`Notion Engine v2.0 Active`})]}),(0,z.jsxs)(`div`,{className:`flex items-center gap-4`,children:[(0,z.jsxs)(`span`,{children:[`Chars: `,e.length]}),(0,z.jsxs)(`span`,{className:`flex items-center gap-1`,children:[(0,z.jsx)(ie,{size:12}),` UTF-8`]})]})]})]})}(0,x.createRoot)(document.getElementById(`root`)).render((0,z.jsx)(b.StrictMode,{children:(0,z.jsx)(Zp,{})}));
+
+
+# Markdown 格式范本
+
+> **用途**：本文件展示 Markdown 标准格式，可直接复制作为模板使用。
+> 
+> 版本：GitHub Flavored Markdown (GFM) 兼容
+
+---
+
+## 一、标题体系
+
+# 一级标题 (H1) —— 文档/章节标题
+## 二级标题 (H2) —— 主要章节
+### 三级标题 (H3) —— 小节
+#### 四级标题 (H4) —— 细分内容
+##### 五级标题 (H5) —— 很少用到
+###### 六级标题 (H6) —— 极限深度
+
+---
+
+## 二、段落与文本格式
+
+这是普通段落。
+
+这是独立段落，前后空行分隔。
+
+### 2.1 强调样式
+
+- *斜体* —— 单个星号或下划线：\`*斜体*\` 或 \`_斜体_\`
+- **粗体** —— 双星号或下划线：\`**粗体**\` 或 \`__粗体__\`
+- ***粗斜体*** —— 三星号： \`***粗斜体***\`
+- ~~删除线~~ —— 双波浪线：\`~~删除线~~\`
+- <u>下划线</u> —— HTML标签：\`<u>下划线</u>\`（非标准Markdown）
+- ==高亮== —— 部分编辑器支持：\`==高亮==\`（GFM不支持，需插件）
+- 行内代码 —— 反引号：\`code\`
+
+### 2.2 特殊字符转义
+
+星号转义：\\*  反引号转义：\\\`  井号转义：\\#  反斜杠本身：\\\\
+
+---
+
+## 三、列表体系
+
+### 3.1 无序列表
+
+- 项目一
+- 项目二
+  - 嵌套项目（缩进2空格）
+  - 嵌套项目
+    - 更深嵌套
+- 项目三
+
+* 也可以用星号
++ 或加号
+
+### 3.2 有序列表
+
+1. 第一步
+2. 第二步
+    1. 子步骤（缩进3空格）
+    2. 子步骤
+3. 第三步
+
+### 3.3 任务列表（GFM扩展）
+
+- [x] 已完成任务
+- [ ] 未完成任务
+  - [ ] 子任务A
+  - [x] 子任务B
+
+---
+
+## 四、引用与注释
+
+### 4.1 块引用
+
+> 单行引用
+
+> 多行引用
+> 第二行继续
+> 
+> 空行后继续（同一段落）
+
+> 嵌套引用
+>> 第二层引用
+>>> 第三层引用
+> 
+> 回到第一层
+
+### 4.2 引用中的其他元素
+
+> **引用中的粗体**
+> 
+> - 引用中的列表
+> - 列表项二
+> 
+> \`引用中的代码\`
+
+---
+
+## 五、代码展示
+
+### 5.1 行内代码
+
+使用 \`pip install\` 命令安装。
+
+### 5.2 代码块
+
+\`\`\`python
+def hello_world():
+    """带语法高亮的代码块"""
+    print("Hello, World!")
+    return True
+\`\`\`
+
+\`\`\`javascript
+// JavaScript 示例
+const greeting = (name) => {
+    console.log(\`Hello, \${name}!\`);
+};
+\`\`\`
+
+\`\`\`bash
+# Bash 命令示例
+echo "当前日期: $(date)"
+ls -la | grep ".md"
+\`\`\`
+
+\`\`\`text
+纯文本代码块（无语法高亮）
+特殊字符无需转义：* # < >
+\`\`\`
+
+---
+
+## 六、链接体系
+
+### 6.1 行内链接
+
+- [普通链接](https://github.com)
+
+---
+
+## 七、图片与媒体
+
+### 7.1 基础图片
+
+
+---
+
+## 八、表格（GFM扩展）
+
+### 8.1 基础表格
+
+| 表头1 | 表头2 | 表头3 |
+|-------|-------|-------|
+| 内容1 | 内容2 | 内容3 |
+| 左对齐 | 居中 | 右对齐 |
+
+### 表格内格式
+
+| 功能 | 示例 |
+|------|------|
+| 粗体 | **重要** |
+| 代码 | \`inline\` |
+| 链接 | [GitHub](https://github.com) |
+| 删除 | ~~废弃~~ |
+
+---
+
+## 九、分隔线与换行
+
+### 9.1 水平分隔线
+
+以下都是分隔线（至少3个字符）：
+
+---
+
+***
+
+___
+
+
+### 9.2 强制换行
+
+使用 HTML：第一行<br>第二行
+
+---
+
+## 十、HTML 嵌入（GFM支持）
+
+### 10.1 常用HTML标签
+
+<details>
+<summary>点击展开详情</summary>
+
+折叠内容支持 **Markdown** 格式。
+
+\`\`\`python
+print("甚至支持代码块")
+\`\`\`
+
+</details>
+
+### 10.2 其他实用标签
+
+<mark>高亮文本</mark>（部分渲染器支持）
+
+下标：H<sub>2</sub>O  
+上标：x<sup>2</sup>
+
+---
+
+## 十一、扩展语法（非标准但常用）
+
+### 图表（Mermaid，GFM实验性支持）
+
+\`\`\`mermaid
+graph TD;
+    A[开始] --> B{判断};
+    B -->|条件1| C[处理1];
+    B -->|条件2| D[处理2];
+    C --> E[结束];
+    D --> E;
+\`\`\`
+
+### 11.5 表情符号（Emoji）
+
+使用直接输入：😀 ❤️ 👍 🚀
+
+`),[n,r]=(0,b.useState)(``),[i,a]=(0,b.useState)(!1);return(0,b.useEffect)(()=>{localStorage.setItem(Yp,e),r(qp.render(e))},[e]),(0,z.jsxs)(`div`,{className:`flex flex-col h-screen bg-white text-[#373530] overflow-hidden font-sans`,children:[(0,z.jsxs)(`header`,{className:`flex items-center justify-between px-6 py-2 border-b border-[#E9E9E8] h-14 bg-white z-20 shrink-0`,children:[(0,z.jsxs)(`div`,{className:`flex items-center gap-2`,children:[(0,z.jsx)(`div`,{className:`w-8 h-8 bg-[#373530] rounded-[3px] flex items-center justify-center text-white font-bold text-xs`,children:`M`}),(0,z.jsx)(`span`,{className:`font-semibold text-sm`,children:`md2wechat`})]}),(0,z.jsxs)(`div`,{className:`flex items-center gap-2`,children:[(0,z.jsxs)(`button`,{className:`px-3 py-1.5 text-sm text-[#787774] hover:bg-[#F1F1EF] rounded-[3px] flex items-center gap-2 opacity-50 cursor-not-allowed`,children:[(0,z.jsx)(ne,{size:16}),(0,z.jsx)(`span`,{children:`主题`})]}),(0,z.jsx)(`button`,{onClick:async()=>{try{let e=`text/html`,t=new Blob([n],{type:e}),r=[new ClipboardItem({[e]:t})];await navigator.clipboard.write(r),a(!0),setTimeout(()=>a(!1),2e3)}catch{alert(`复制失败，请重试`)}},className:Jp(`px-4 py-1.5 text-sm font-medium rounded-[3px] shadow-sm flex items-center gap-2 transition-all duration-300 min-w-[140px] justify-center`,i?`bg-[#548164] text-white`:`bg-[#487CA5] text-white hover:bg-[#3b6685]`),children:(0,z.jsx)(qc,{mode:`wait`,children:i?(0,z.jsxs)(Ru.div,{initial:{y:5,opacity:0},animate:{y:0,opacity:1},exit:{y:-5,opacity:0},className:`flex items-center gap-2`,children:[(0,z.jsx)(re,{size:16}),` `,(0,z.jsx)(`span`,{children:`已复制!`})]},`c`):(0,z.jsxs)(Ru.div,{initial:{y:5,opacity:0},animate:{y:0,opacity:1},exit:{y:-5,opacity:0},className:`flex items-center gap-2`,children:[(0,z.jsx)(ee,{size:16}),` `,(0,z.jsx)(`span`,{children:`复制到公众号`})]},`n`)})}),(0,z.jsx)(`div`,{className:`w-px h-6 bg-[#E9E9E8] mx-2`}),(0,z.jsx)(`a`,{href:`https://github.com`,target:`_blank`,rel:`noreferrer`,className:`p-2 text-[#787774] hover:text-[#373530]`,children:(0,z.jsx)(te,{size:18})})]})]}),(0,z.jsxs)(`main`,{className:`flex flex-1 overflow-hidden`,children:[(0,z.jsxs)(`section`,{className:`flex-1 flex flex-col border-r border-[#E9E9E8] bg-[#FBFAFB]`,children:[(0,z.jsx)(`div`,{className:`px-4 py-2 text-[10px] uppercase font-bold tracking-widest text-[#787774] border-b border-[#E9E9E8]`,children:`Editor`}),(0,z.jsx)(`textarea`,{value:e,onChange:e=>t(e.target.value),className:`flex-1 p-8 bg-transparent outline-none resize-none font-mono text-[14px] leading-relaxed overflow-y-auto`,placeholder:`Type your markdown here...`})]}),(0,z.jsxs)(`section`,{className:`flex-1 flex flex-col bg-white overflow-hidden`,children:[(0,z.jsx)(`div`,{className:`px-4 py-2 text-[10px] uppercase font-bold tracking-widest text-[#787774] border-b border-[#E9E9E8] sticky top-0 bg-white/95 backdrop-blur z-10`,children:`Preview`}),(0,z.jsx)(`div`,{className:`flex-1 overflow-y-auto py-12 px-8`,children:(0,z.jsx)(`div`,{className:`max-w-[677px] mx-auto w-full`,children:(0,z.jsx)(`div`,{style:{all:`revert`},className:`notion-viewer`,dangerouslySetInnerHTML:{__html:n}})})})]})]}),(0,z.jsxs)(`footer`,{className:`px-4 py-1.5 border-t border-[#E9E9E8] bg-white text-[11px] text-[#787774] flex justify-between items-center shrink-0`,children:[(0,z.jsxs)(`div`,{className:`flex items-center gap-2`,children:[(0,z.jsx)(`span`,{className:`w-2 h-2 rounded-full bg-[#548164]`}),(0,z.jsx)(`span`,{children:`Notion Engine v2.0 Active`})]}),(0,z.jsxs)(`div`,{className:`flex items-center gap-4`,children:[(0,z.jsxs)(`span`,{children:[`Chars: `,e.length]}),(0,z.jsxs)(`span`,{className:`flex items-center gap-1`,children:[(0,z.jsx)(ie,{size:12}),` UTF-8`]})]})]})]})}(0,x.createRoot)(document.getElementById(`root`)).render((0,z.jsx)(b.StrictMode,{children:(0,z.jsx)(Xp,{})}));
