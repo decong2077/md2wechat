@@ -303,8 +303,8 @@ export class MarkdownEngine {
     return html;
   }
 
-  public render(markdown: string): string {
-    this.footnotes = [];
+  public render(markdown: string, isNested = false): string {
+    if (!isNested) this.footnotes = [];
     try {
       let content = markdown;
       const calloutBlocks: string[] = [];
@@ -344,7 +344,7 @@ export class MarkdownEngine {
             }
             break;
           case 'blockquote':
-            html += `<blockquote style="${S.blockquote}">${this.render(token.text)}</blockquote>`;
+            html += `<blockquote style="${S.blockquote}">${this.render(token.text, true)}</blockquote>`;
             break;
           case 'list':
             html += this.renderListHtml(token, 0);
@@ -365,7 +365,7 @@ export class MarkdownEngine {
 
       calloutBlocks.forEach((blockHtml, i) => { html = html.replace(`__CALLOUT_BLOCK_${i}__`, blockHtml); });
 
-      if (this.footnotes.length > 0) {
+      if (!isNested && this.footnotes.length > 0) {
         html += '<div style="margin-top:40px; border-top:1px solid #E9E9E8; padding-top:20px; display:block;">';
         html += '<h4 style="font-size:14px; font-weight:bold; color:#787774; margin-bottom:12px; display:block;">参考资料</h4>';
         this.footnotes.forEach((fn, i) => { html += `<p style="font-size:12px; color:#787774; margin:6px 0; line-height:1.6; display:block;">[${i + 1}] ${fn.title}: ${fn.url}</p>`; });
