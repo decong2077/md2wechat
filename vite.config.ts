@@ -8,6 +8,6 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
-  // 必须设置 base 路径，否则 GitHub Pages 无法加载 JS/CSS
-  base: '/md2wechat/',
+  // GitHub Pages 需要 base 路径，Vercel 使用根路径
+  base: process.env.VERCEL ? '/' : '/md2wechat/',
 })
