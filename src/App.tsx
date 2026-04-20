@@ -162,7 +162,7 @@ export default function App() {
             </AnimatePresence>
           </button>
           <div className="w-px h-6 bg-[#E9E9E8] mx-2" />
-          <a href="https://github.com" target="_blank" rel="noreferrer" className="p-2 text-[#787774] hover:text-[#373530]"><Github size={18} /></a>
+          <a href="https://github.com/decong2077/md2wechat" target="_blank" rel="noreferrer" title="View on GitHub" className="p-2 text-[#787774] hover:text-[#373530]"><Github size={18} /></a>
         </div>
       </header>
 
@@ -195,7 +195,7 @@ export default function App() {
       <footer className="px-4 py-1.5 border-t border-[#E9E9E8] bg-white text-[11px] text-[#787774] flex justify-between items-center shrink-0">
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-[#548164]"></span>
-          <span>Notion Engine v2.0 Active</span>
+          <span>10 Themes Ready</span>
         </div>
         <div className="flex items-center gap-4">
           <span>Chars: {markdown.length}</span>
