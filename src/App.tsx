@@ -14,9 +14,26 @@ const STORAGE_KEY = 'md2wechat-draft-v2';
 const THEME_STORAGE_KEY = 'md2wechat-theme-v1';
 
 const THEMES: { id: Theme; label: string }[] = [
-  { id: 'notion', label: 'Notion' },
+  { id: 'default', label: '默认主题' },
   { id: 'elegant', label: '淡雅' },
+  { id: 'ink', label: '墨玉' },
+  { id: 'cyan', label: '黛青' },
+  { id: 'crimson', label: '绯红' },
+  { id: 'amber', label: '藤黄' },
+  { id: 'indigo', label: '靛蓝' },
+  { id: 'lotus', label: '藕荷' },
+  { id: 'bamboo', label: '竹青' },
+  { id: 'cinnabar', label: '朱砂' },
 ];
+
+const VALID_THEMES = THEMES.map(t => t.id);
+
+function getValidTheme(stored: string | null): Theme {
+  if (stored && VALID_THEMES.includes(stored as Theme)) {
+    return stored as Theme;
+  }
+  return 'default';
+}
 
 export default function App() {
   const [markdown, setMarkdown] = useState(() => {
@@ -25,7 +42,7 @@ export default function App() {
   const [html, setHtml] = useState('');
   const [isCopied, setIsCopied] = useState(false);
   const [currentTheme, setCurrentTheme] = useState<Theme>(() => {
-    return (localStorage.getItem(THEME_STORAGE_KEY) as Theme) || 'notion';
+    return getValidTheme(localStorage.getItem(THEME_STORAGE_KEY));
   });
   const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false);
 
@@ -39,8 +56,11 @@ export default function App() {
   };
 
   useEffect(() => {
-    // 初始化引擎主题
-    engine.setTheme(currentTheme);
+    // 确保引擎主题与状态同步（处理 React 严格模式下的重复渲染）
+    if (engine.getTheme() !== currentTheme) {
+      engine.setTheme(currentTheme);
+      setHtml(engine.render(markdown));
+    }
   }, []);
 
   // 点击外部关闭主题菜单
