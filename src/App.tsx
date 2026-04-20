@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Copy, Type, LayoutDashboard, Github, Sparkles } from 'lucide-react';
+import { Copy, Type, LayoutDashboard, Github, Sparkles, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { engine } from './lib/MarkdownEngine';
+import { engine, type Theme } from './lib/MarkdownEngine';
 import defaultMarkdown from '../Markdown.md?raw';
 
 function cn(...inputs: ClassValue[]) {
@@ -11,6 +11,12 @@ function cn(...inputs: ClassValue[]) {
 }
 
 const STORAGE_KEY = 'md2wechat-draft-v2';
+const THEME_STORAGE_KEY = 'md2wechat-theme-v1';
+
+const THEMES: { id: Theme; label: string }[] = [
+  { id: 'notion', label: 'Notion' },
+  { id: 'elegant', label: '淡雅' },
+];
 
 export default function App() {
   const [markdown, setMarkdown] = useState(() => {
@@ -18,11 +24,42 @@ export default function App() {
   });
   const [html, setHtml] = useState('');
   const [isCopied, setIsCopied] = useState(false);
+  const [currentTheme, setCurrentTheme] = useState<Theme>(() => {
+    return (localStorage.getItem(THEME_STORAGE_KEY) as Theme) || 'notion';
+  });
+  const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false);
+
+  // 切换主题
+  const handleThemeChange = (theme: Theme) => {
+    setCurrentTheme(theme);
+    engine.setTheme(theme);
+    localStorage.setItem(THEME_STORAGE_KEY, theme);
+    setHtml(engine.render(markdown));
+    setIsThemeMenuOpen(false);
+  };
+
+  useEffect(() => {
+    // 初始化引擎主题
+    engine.setTheme(currentTheme);
+  }, []);
+
+  // 点击外部关闭主题菜单
+  useEffect(() => {
+    if (!isThemeMenuOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.theme-dropdown')) {
+        setIsThemeMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isThemeMenuOpen]);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, markdown);
     setHtml(engine.render(markdown));
-  }, [markdown]);
+  }, [markdown, currentTheme]);
 
   const handleCopy = async () => {
     try {
@@ -48,10 +85,43 @@ export default function App() {
         </div>
 
         <div className="flex items-center gap-2">
-          <button className="px-3 py-1.5 text-sm text-[#787774] hover:bg-[#F1F1EF] rounded-[3px] flex items-center gap-2 opacity-50 cursor-not-allowed">
-            <LayoutDashboard size={16} />
-            <span>主题</span>
-          </button>
+          <div className="relative theme-dropdown">
+            <button 
+              onClick={() => setIsThemeMenuOpen(!isThemeMenuOpen)}
+              className="px-3 py-1.5 text-sm text-[#787774] hover:bg-[#F1F1EF] rounded-[3px] flex items-center gap-2"
+            >
+              <LayoutDashboard size={16} />
+              <span>{THEMES.find(t => t.id === currentTheme)?.label || '主题'}</span>
+            </button>
+            
+            <AnimatePresence>
+              {isThemeMenuOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -5 }}
+                  className="absolute top-full right-0 mt-1 bg-white border border-[#E9E9E8] rounded-[3px] shadow-lg py-1 min-w-[120px] z-50"
+                >
+                  {THEMES.map((theme) => (
+                    <button
+                      key={theme.id}
+                      onClick={() => handleThemeChange(theme.id)}
+                      className="w-full px-3 py-2 text-sm text-left flex items-center justify-between hover:bg-[#F1F1EF]"
+                    >
+                      <span className={cn(
+                        theme.id === currentTheme ? 'text-[#373530] font-medium' : 'text-[#787774]'
+                      )}>
+                        {theme.label}
+                      </span>
+                      {theme.id === currentTheme && (
+                        <Check size={14} className="text-[#548164]" />
+                      )}
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
           <button 
             onClick={handleCopy}
             className={cn(
