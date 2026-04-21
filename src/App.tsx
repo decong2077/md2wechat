@@ -226,7 +226,6 @@ export default function App() {
             <div className="max-w-[677px] mx-auto w-full">
               {/* 核心渲染容器 */}
               <div 
-                style={{ all: 'revert' }}
                 className="notion-viewer"
                 dangerouslySetInnerHTML={{ __html: html }}
               />

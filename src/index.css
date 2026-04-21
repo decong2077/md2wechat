@@ -22,24 +22,33 @@
   }
 
   /* 彻底解决粗体斜体失效：针对预览容器内的标签进行强力恢复 */
-  .notion-render-container strong {
+  .notion-viewer strong {
     font-weight: bold !important;
     display: inline !important;
     color: inherit;
   }
 
-  .notion-render-container em {
+  .notion-viewer em {
     font-style: italic !important;
     display: inline !important;
     color: inherit;
   }
 
-  .notion-render-container del {
+  .notion-viewer del {
     text-decoration: line-through !important;
   }
 
-  .notion-render-container u {
+  .notion-viewer u {
     text-decoration: underline !important;
+  }
+
+  /* 保护行内代码样式不被覆盖 */
+  .notion-viewer code {
+    font-family: Menlo, Monaco, Consolas, monospace !important;
+    background-color: inherit !important;
+    padding: inherit !important;
+    border-radius: inherit !important;
+    color: inherit !important;
   }
 
   .no-scrollbar::-webkit-scrollbar {
