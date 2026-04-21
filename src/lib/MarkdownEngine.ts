@@ -415,6 +415,17 @@ function escapeHtml(s: string): string {
 }
 
 /** 微信后台易折叠空格、忽略换行：仅改写标签外的文本节点 */
+/** 验证 URL 是否合法（防止非法链接进入脚注） */
+function isValidUrl(url: string): boolean {
+  try {
+    // 支持 http:, https:, mailto:, tel: 等常见协议
+    const parsed = new URL(url, url.startsWith('http') ? undefined : 'http://localhost');
+    return ['http:', 'https:', 'mailto:', 'tel:'].includes(parsed.protocol);
+  } catch {
+    return false;
+  }
+}
+
 function preserveCodeWhitespaceForWeChat(html: string): string {
   return html.split(/(<[^>]*>)/g).map((seg) => {
     if (seg.startsWith('<')) return seg;
@@ -559,6 +570,10 @@ export class MarkdownEngine {
         },
         link({ href, text }: any) {
           if (href.startsWith('#')) return `<span style="${self.S.a}">${text}</span>`;
+          // 验证 URL 合法性，不合法的链接不进入脚注
+          if (!isValidUrl(href)) {
+            return `<span style="${self.S.a}">${text}</span>`;
+          }
           self.footnotes.push({ title: text, url: href });
           return `<span style="${self.S.a}">${text}</span><sup style="font-size:10px; color:#787774; margin-left:2px;">[${self.footnotes.length}]</sup>`;
         },
@@ -598,6 +613,10 @@ export class MarkdownEngine {
     html = html.replace(/<u>([\s\S]+?)<\/u>/g, `<span style="${this.S.u}">$1</span>`);
     html = html.replace(/\[([\s\S]+?)\]\(([\s\S]+?)\)/g, (_, label, href) => {
       if (href.startsWith('#')) return `<span style="${this.S.a}">${label}</span>`;
+      // 验证 URL 合法性，不合法的链接不进入脚注
+      if (!isValidUrl(href)) {
+        return `<span style="${this.S.a}">${label}</span>`;
+      }
       this.footnotes.push({ title: label, url: href });
       return `<span style="${this.S.a}">${label}</span><sup style="font-size:10px; color:#787774; margin-left:2px;">[${this.footnotes.length}]</sup>`;
     });
@@ -608,6 +627,15 @@ export class MarkdownEngine {
 
   private buildCodeBlockHtml(raw: string, lang: string | undefined): string {
     const language = lang || 'javascript';
+    const MAX_CODE_LENGTH = 50000; // 50KB 限制，防止 OOM
+
+    // 超长代码直接截断，避免 Prism 高亮导致性能问题
+    if (raw.length > MAX_CODE_LENGTH) {
+      const truncated = raw.substring(0, MAX_CODE_LENGTH);
+      const inner = preserveCodeWhitespaceForWeChat(escapeHtml(truncated));
+      return `<pre style="${this.S.pre}"><code style="${this.S.codeBlock}"><!-- 代码过长已截断 (原长度: ${raw.length}) -->\n${inner}\n...</code></pre>`;
+    }
+
     let inner: string;
     try {
       if (Prism.languages[language]) {
@@ -617,7 +645,8 @@ export class MarkdownEngine {
       } else {
         inner = preserveCodeWhitespaceForWeChat(escapeHtml(raw));
       }
-    } catch {
+    } catch (e) {
+      console.warn(`代码高亮失败 [${language}]:`, e);
       inner = preserveCodeWhitespaceForWeChat(escapeHtml(raw));
     }
     return `<pre style="${this.S.pre}"><code style="${this.S.codeBlock}">${inner}</code></pre>`;
@@ -631,7 +660,8 @@ export class MarkdownEngine {
 
       content = content.replace(/^:::callout\s+([\s\S]+?)\n:::/gm, (_, inner) => {
         const id = `__CALLOUT_BLOCK_${calloutBlocks.length}__`;
-        const m = inner.match(/^([\uD800-\uDBFF][\uDC00-\uDFFF]|[\u2600-\u27BF])\s?([\s\S]+)$/);
+        // 使用 Unicode 属性转义安全匹配 Emoji（避免 ReDoS 回溯）
+        const m = inner.match(/^(\p{Emoji})\s?([\s\S]+)$/u);
         const icon = m ? m[1] : '💡';
         const text = m ? m[2] : inner;
         

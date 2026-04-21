@@ -13,6 +13,30 @@ function cn(...inputs: ClassValue[]) {
 const STORAGE_KEY = 'md2wechat-draft-v2';
 const THEME_STORAGE_KEY = 'md2wechat-theme-v1';
 
+// 安全的 localStorage 封装
+function safeLocalStorageGet(key: string): string | null {
+  try {
+    return localStorage.getItem(key);
+  } catch (e) {
+    console.warn('localStorage get failed:', e);
+    return null;
+  }
+}
+
+function safeLocalStorageSet(key: string, value: string): boolean {
+  try {
+    localStorage.setItem(key, value);
+    return true;
+  } catch (e) {
+    if (e instanceof Error && e.name === 'QuotaExceededError') {
+      console.warn('localStorage 已满，无法保存');
+    } else {
+      console.warn('localStorage set failed:', e);
+    }
+    return false;
+  }
+}
+
 const THEMES: { id: Theme; label: string }[] = [
   { id: 'default', label: '默认主题' },
   { id: 'elegant', label: '淡雅' },
@@ -37,12 +61,12 @@ function getValidTheme(stored: string | null): Theme {
 
 export default function App() {
   const [markdown, setMarkdown] = useState(() => {
-    return localStorage.getItem(STORAGE_KEY) || defaultMarkdown;
+    return safeLocalStorageGet(STORAGE_KEY) || defaultMarkdown;
   });
   const [html, setHtml] = useState('');
   const [isCopied, setIsCopied] = useState(false);
   const [currentTheme, setCurrentTheme] = useState<Theme>(() => {
-    return getValidTheme(localStorage.getItem(THEME_STORAGE_KEY));
+    return getValidTheme(safeLocalStorageGet(THEME_STORAGE_KEY));
   });
   const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false);
 
@@ -50,7 +74,7 @@ export default function App() {
   const handleThemeChange = (theme: Theme) => {
     setCurrentTheme(theme);
     engine.setTheme(theme);
-    localStorage.setItem(THEME_STORAGE_KEY, theme);
+    safeLocalStorageSet(THEME_STORAGE_KEY, theme);
     setHtml(engine.render(markdown));
     setIsThemeMenuOpen(false);
   };
@@ -77,7 +101,7 @@ export default function App() {
   }, [isThemeMenuOpen]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, markdown);
+    safeLocalStorageSet(STORAGE_KEY, markdown);
     setHtml(engine.render(markdown));
   }, [markdown, currentTheme]);
 
@@ -91,8 +115,27 @@ export default function App() {
       await navigator.clipboard.write(data);
       setIsCopied(true);
       setTimeout(() => setIsCopied(false), 2000);
-    } catch (err) {
-      alert('复制失败，请重试');
+    } catch {
+      // 降级方案 1：尝试纯 HTML 复制
+      try {
+        const textArea = document.createElement('textarea');
+        textArea.value = html;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-9999px';
+        textArea.style.opacity = '0';
+        document.body.appendChild(textArea);
+        textArea.select();
+        const success = document.execCommand('copy');
+        document.body.removeChild(textArea);
+        if (success) {
+          setIsCopied(true);
+          setTimeout(() => setIsCopied(false), 2000);
+          return;
+        }
+      } catch {
+        // 降级方案都失败
+      }
+      alert('复制失败，请手动复制');
     }
   };
 
